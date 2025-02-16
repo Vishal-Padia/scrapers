@@ -41,7 +41,7 @@ class DailymotionScraper:
 
         time.sleep(10)
 
-        # find anchor tag with text 480P
+        # need to find a better way to do find the download link, but this works as of now
         download_link = self.driver.find_element(
             By.XPATH, '//*[@id="result"]/div/div/div[1]/div/div[2]/a[2]'
         )
