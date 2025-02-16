@@ -59,3 +59,90 @@ Once identified, extract the segments where the speaker is present.
 The above sounds easy to do, but it's not, because the video can have multiple speakers and we need to make sure that each speaker is detected and tracked properly, so that we can use the video for traning the model.
 
 Firstly I need focus on scraping the videos, then I'll move on to the difficult part.
+
+```mermaid
+graph TB
+    subgraph AWS_Cloud[AWS Cloud]
+        subgraph EC2_Lambda["EC2/Lambda Instance"]
+            direction TB
+            MT[Multi-threaded Controller]
+
+            subgraph Scrapers
+                YS[YouTube Scraper Selenium]
+                AS[Archive Scraper Selenium]
+                DS[Dailymotion Scraper Selenium]
+                TS[Torrent Scraper Selenium]
+            end
+
+            subgraph Downloaders
+                YD[YouTube Downloader youtube-dl]
+                AD[Archive Downloader API Client]
+                DD[Dailymotion Downloader vidburner]
+                TD[Torrent Downloader Library]
+            end
+        end
+
+        subgraph RDS_Database["RDS/Database"]
+            direction TB
+            YT[(YouTube URLs uuid, urls, status)]
+            AT[(Archive URLs uuid, urls, status)]
+            DT[(Dailymotion URLs uuid, urls, status)]
+            TT[(Torrent URLs uuid, urls, status)]
+        end
+
+        CW[CloudWatch Logs]
+        S3[S3 Storage]
+    end
+
+    %% Scraper to Database flows
+    YS -->|Insert URLs, status: 'pending'| YT
+    AS -->|Insert URLs, status: 'pending'| AT
+    DS -->|Insert URLs, status: 'pending'| DT
+    TS -->|Insert URLs, status: 'pending'| TT
+
+    %% Database to Scraper flows (fetch pending URLs)
+    YT -->|Fetch URLs, status: 'pending'| YS
+    AT -->|Fetch URLs, status: 'pending'| AS
+    DT -->|Fetch URLs, status: 'pending'| DS
+    TT -->|Fetch URLs, status: 'pending'| TS
+
+    %% Scraper updates status to 'scraped'
+    YS -->|Update status: 'scraped'| YT
+    AS -->|Update status: 'scraped'| AT
+    DS -->|Update status: 'scraped'| DT
+    TS -->|Update status: 'scraped'| TT
+
+    %% Database to Downloader flows (fetch scraped URLs)
+    YT -->|Fetch URLs, status: 'scraped'| YD
+    AT -->|Fetch URLs, status: 'scraped'| AD
+    DT -->|Fetch URLs, status: 'scraped'| DD
+    TT -->|Fetch URLs, status: 'scraped'| TD
+
+    %% Downloader updates status to 'downloaded'
+    YD -->|Update status: 'downloaded'| YT
+    AD -->|Update status: 'downloaded'| AT
+    DD -->|Update status: 'downloaded'| DT
+    TD -->|Update status: 'downloaded'| TT
+
+    %% Controller connections
+    MT -->|Spawn Threads| Scrapers
+    MT -->|Spawn Threads| Downloaders
+
+    %% Logging flows
+    Scrapers -->|Log Events| CW
+    Downloaders -->|Log Events| CW
+
+    %% Download storage
+    YD -->|Store Content| S3
+    AD -->|Store Content| S3
+    DD -->|Store Content| S3
+    TD -->|Store Content| S3
+
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px;
+    classDef db fill:#3C873A,stroke:#232F3E,stroke-width:2px;
+    classDef component fill:#3498DB,stroke:#232F3E,stroke-width:2px;
+
+    class CW,S3 aws;
+    class YT,AT,DT,TT db;
+    class YS,AS,DS,TS,YD,AD,DD,TD component;
+```
