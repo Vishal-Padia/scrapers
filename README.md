@@ -22,16 +22,19 @@ Tricky af, because they block scraping, and may permanently block the IP
 I can use selenium to navigate to the website and then download the videos from there, pretty straightforward
 
 4. Dailymotion:
-I can use selenium to navigate to the website, then copy the url and then we can navigate to savefrom.net and then paste the url in the input box and then download the video.
+I can use selenium to navigate to the website, then copy the url and then we can navigate to savefrom.net/vidburner.com and then paste the url in the input box and then download the video.
 
 5. Invideo:
 Thinking in progress
 
 6. Vimeo:
 Same as Dailymotion.
+UPDATE: Due to dynamically generated hash in the config url of the video, we can't download it. Still there is a way to download the video, we can use websites like savethevideo.com, vidburner.com, etc. to download the video, but they are very slow and we can't download multiple videos at once, so we need to find a way to download the videos from vimeo.
 
 7. Movies from torrents:
 We can use python-qbittorrent library for this, but we'll need to install qBittorrent on the server, enable the web ui for it (so that we can access it on the local host) and then we can use the library to download the torrents, here also we need to determine what types of movies we need to download, like we can download movies from the top 250 list of IMDB, or we can download movies from the top 100 list of Rotten Tomatoes, etc.
+
+UPDATE: There's a library called torrentp, which can be used to download videos from torrents. But we'll still need to get the magnet link of the torrent, we can use sites like 1337x, piratebay, etc. to get the magnet link of the torrent using selenium.
 
 ### Difficult part:
 
